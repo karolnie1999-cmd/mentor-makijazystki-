@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>✨ Mentor Makijażystki</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #d4a0b4;
+            --primary-dark: #b8829a;
+            --primary-light: #f0e0e8;
+            --bg: #faf5f7;
+            --bg-card: #ffffff;
+            --text: #2d1b24;
+            --text-light: #7a5a6a;
+            --success: #7bc4a8;
+            --shadow: 0 2px 20px rgba(180,120,140,0.15);
+            --radius: 24px;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .app { width: 100%; max-width: 430px; height: 100vh; max-height: 932px; background: var(--bg-card); display: flex; flex-direction: column; position: relative; overflow: hidden; }
+        @media (min-width: 500px) { body { padding: 20px; } .app { border-radius: var(--radius); box-shadow: var(--shadow); height: 90vh; min-height: 700px; } }
+        .header { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; padding: 18px 20px 14px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+        .header-avatar { width: 46px; height: 46px; background: rgba(255,255,255,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+        .header-info h1 { font-size: 17px; font-weight: 600; }
+        .header-info p { font-size: 12px; opacity: 0.85; margin-top: 1px; }
+        .header-status { margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 11px; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 20px; }
+        .header-status .dot { width: 7px; height: 7px; background: #7bc4a8; border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .chat-area { flex: 1; overflow-y: auto; padding: 16px 16px 8px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
+        .chat-area::-webkit-scrollbar { width: 3px; }
+        .chat-area::-webkit-scrollbar-thumb { background: var(--primary-light); border-radius: 10px; }
+        .message { display: flex; gap: 10px; max-width: 88%; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .message.bot { align-self: flex-start; }
+        .message.user { align-self: flex-end; flex-direction: row-reverse; }
+        .message-avatar { width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-top: 2px; }
+        .message.bot .message-avatar { background: linear-gradient(135deg, var(--primary-light), #e8ccd8); }
+        .message.user .message-avatar { background: linear-gradient(135deg, #e8e0e4, #d4ccd0); font-size: 14px; }
+        .message-bubble { padding: 12px 16px; border-radius: 18px; font-size: 15px; line-height: 1.5; word-wrap: break-word; }
+        .message.bot .message-bubble { background: var(--primary-light); border-bottom-left-radius: 4px; color: var(--text); }
+        .message.user .message-bubble { background: var(--primary); color: white; border-bottom-right-radius: 4px; }
+        .message.bot .message-bubble strong { color: var(--primary-dark); }
+        .typing { align-self: flex-start; display: flex; align-items: center; gap: 10px; padding: 4px 0; animation: fadeIn 0.2s ease; }
+        .typing-dots { background: var(--primary-light); padding: 14px 18px; border-radius: 18px; border-bottom-left-radius: 4px; display: flex; gap: 5px; }
+        .typing-dots span { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; animation: bounce 1.4s infinite ease-in-out; }
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+        .quick-actions { display: flex; gap: 8px; padding: 0 16px 8px; overflow-x: auto; flex-shrink: 0; scrollbar-width: none; }
+        .quick-actions::-webkit-scrollbar { display: none; }
+        .quick-btn { white-space: nowrap; padding: 8px 16px; border: 1.5px solid var(--primary-light); background: white; border-radius: 20px; font-size: 13px; color: var(--primary-dark); cursor: pointer; transition: all 0.2s; flex-shrink: 0; font-weight: 500; }
+        .quick-btn:active { background: var(--primary-light); transform: scale(0.96); }
+        .input-area { padding: 12px 16px 16px; border-top: 1px solid #f0e8ec; display: flex; gap: 10px; align-items: flex-end; flex-shrink: 0; background: white; }
+        .input-wrapper { flex: 1; background: var(--bg); border-radius: 24px; padding: 4px 16px; display: flex; align-items: flex-end; border: 1.5px solid transparent; transition: border 0.2s; }
+        .input-wrapper:focus-within { border-color: var(--primary); background: white; }
+        .input-wrapper textarea { flex: 1; border: none; background: transparent; padding: 10px 0; font-size: 15px; font-family: inherit; resize: none; outline: none; color: var(--text); min-height: 24px; max-height: 120px; line-height: 1.4; }
+        .input-wrapper textarea::placeholder { color: #b8a0ac; }
+        .send-btn { width: 44px; height: 44px; border-radius: 50%; border: none; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; font-size: 20px; cursor: pointer; transition: all 0.2s; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .send-btn:active { transform: scale(0.9); }
+        .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .welcome-msg { text-align: center; padding: 30px 16px 16px; }
+        .welcome-msg .big-emoji { font-size: 56px; margin-bottom: 12px; }
+        .welcome-msg h2 { font-size: 20px; color: var(--text); margin-bottom: 6px; }
+        .welcome-msg p { font-size: 14px; color: var(--text-light); line-height: 1.6; }
+        .onboarding { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(45,27,36,0.7); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 100; padding: 24px; transition: opacity 0.4s; }
+        .onboarding.hidden { opacity: 0; pointer-events: none; }
+        .onboarding-card { background: white; border-radius: 28px; padding: 32px 24px 24px; max-width: 360px; width: 100%; text-align: center; animation: slideUp 0.4s ease; }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .onboarding-card .big-icon { font-size: 56px; margin-bottom: 16px; }
+        .onboarding-card h2 { font-size: 22px; color: var(--text); margin-bottom: 8px; }
+        .onboarding-card p { font-size: 14px; color: var(--text-light); line-height: 1.6; margin-bottom: 24px; }
+        .onboarding-card .features { text-align: left; margin-bottom: 24px; display: flex; flex-direction: column; gap: 12px; }
+        .onboarding-card .feat { display: flex; align-items: center; gap: 12px; font-size: 14px; color: var(--text); }
+        .onboarding-card .feat .check { width: 28px; height: 28px; background: var(--success); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; flex-shrink: 0; }
+        .onboarding-card .start-btn { width: 100%; padding: 16px; border: none; border-radius: 16px; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; font-size: 17px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .onboarding-card .start-btn:active { transform: scale(0.97); }
+        .onboarding-card .footer-note { margin-top: 14px; font-size: 12px; color: var(--text-light); }
+        .brand-bar { text-align: center; padding: 6px 0; font-size: 10px; color: var(--text-light); opacity: 0.5; flex-shrink: 0; background: white; }
+    </style>
+</head>
+<body>
+<div class="app">
+    <div class="onboarding" id="onboarding">
+        <div class="onboarding-card">
+            <div class="big-icon">✨</div>
+            <h2>Mentor Makijażystki</h2>
+            <p>Twój osobisty asystent AI, który pomoże Ci rozwinąć biznes beauty, stworzyć kurs online i zdobyć klientki.</p>
+            <div class="features">
+                <div class="feat"><span class="check">✓</span>Odpowiedzi na pytania 24/7</div>
+                <div class="feat"><span class="check">✓</span>Produkty, kosmetyki, pędzle</div>
+                <div class="feat"><span class="check">✓</span>Kształty oczu i twarzy</div>
+                <div class="feat"><span class="check">✓</span>Brwi, rzęsy, cross-selling</div>
+            </div>
+            <button class="start-btn" onclick="startApp()">Rozpocznij bezpłatnie →</button>
+            <div class="footer-note">Korzysta z AI • Twoje dane są bezpieczne</div>
+        </div>
+    </div>
+    <div class="header">
+        <div class="header-avatar">✨</div>
+        <div class="header-info"><h1>Mentor Makijażystki</h1><p>Twój AI asystent branży beauty</p></div>
+        <div class="header-status"><span class="dot"></span>Online</div>
+    </div>
+    <div class="quick-actions" id="quickActions">
+        <button class="quick-btn" onclick="sendQuick('Jak zacząć przygodę z makijażem?')">🚀 Jak zacząć?</button>
+        <button class="quick-btn" onclick="sendQuick('Ile brać za makijaż ślubny?')">💰 Cennik</button>
+        <button class="quick-btn" onclick="sendQuick('Jakie pędzle kupić na start?')">🖌️ Pędzle</button>
+        <button class="quick-btn" onclick="sendQuick('Jaki makijaż do okrągłej twarzy?')">👩 Kształty</button>
+        <button class="quick-btn" onclick="sendQuick('Jak zarobić więcej jako makijażystka?')">💎 Cross-selling</button>
+    </div>
+    <div class="chat-area" id="chatArea">
+        <div class="welcome-msg">
+            <div class="big-emoji">💄</div>
+            <h2>Cześć! Jestem Mentor Makijażystki ✨</h2>
+            <p>Zadaj mi pytanie o makijaż, kosmetyki, pędzle, kształty twarzy, brwi, rzęsy, biznes, social media, kursy, cross-selling – służę radą! 😊</p>
+        </div>
+    </div>
+    <div class="input-area">
+        <div class="input-wrapper"><textarea id="inputField" rows="1" placeholder="Napisz wiadomość..." enterkeyhint="send"></textarea></div>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">➤</button>
+    </div>
+    <div class="brand-bar">✨ Mentor Makijażystki v1.2</div>
+</div>
+
+<script>
+    const CHAT = document.getElementById('chatArea');
+    const INPUT = document.getElementById('inputField');
+    const SEND = document.getElementById('sendBtn');
+    const ONBOARD = document.getElementById('onboarding');
+
+    const ANSWERS = {
+        'jak zacząć': 'Świetnie, że pytasz! Oto plan startu krok po kroku 💪<br><br><strong>Krok 1 – Kurs:</strong> Zapisz się na kurs makijażu stacjonarny (1500-3000 zł, 2-3 dni). Polecam Make Up Studio lub Glamour Studio.<br><strong>Krok 2 – Sprzęt:</strong> Podstawowy zestaw 5 pędzli syntetycznych (~100 zł) + podkład, puder, cienie, tusz, róż (~300-400 zł). Łącznie ~500-1000 zł.<br><strong>Krok 3 – Praktyka:</strong> Zrób makijaż 5 znajomym za darmo → zdjęcia → pierwsze portfolio.<br><strong>Krok 4 – Instagram:</strong> Załóż konto biznesowe, wrzuć zdjęcia swoich prac.<br><strong>Krok 5 – Ceny:</strong> Zacznij od -20% rynkowych, potem podnoś.<br><br>Nie potrzebujesz dyplomu państwowego – liczy się portfolio i praktyka!',
+
+        'ile brać': 'Aktualne stawki rynkowe 2026 💰<br><br><strong>Makijaż dzienny:</strong> 100-200 zł<br><strong>Makijaż wieczorowy:</strong> 150-300 zł<br><strong>Makijaż ślubny (panna młoda):</strong> 400-800 zł (próba: 100-200 zł odliczane od całości)<br><strong>Makijaż ślubny (druhna):</strong> 200-400 zł<br><strong>Makijaż okolicznościowy:</strong> 150-350 zł<br><strong>Dojazd:</strong> +50-100 zł<br><strong>Kurs 1:1 (2h):</strong> 200-400 zł<br><strong>Kurs grupowy (4h):</strong> 250-500 zł/os<br><strong>Korekta brwi:</strong> 40-80 zł<br><strong>Przedłużanie rzęs:</strong> 100-200 zł<br><br>💡 Złota zasada: koszty + 30% marży. Nie schodź poniżej!',
+
+        'instagram': 'Plan na Instagram 📱<br><br><strong>Tydzień 1:</strong> Zrób 5 dobrych zdjęć (naturalne światło!)<br><strong>Tydzień 2:</strong> Post 3 razy (Before/After to absolutny hit!)<br><strong>Tydzień 3:</strong> Dodaj pierwszy Reel (makijaż w 60s)<br><strong>Tydzień 4:</strong> Zrób Q&A w stories<br><br><strong>Stały harmonogram:</strong><br>• Posty: 3-5x/tydzień<br>• Reels: 2-3/tydzień (największy zasięg!)<br>• Stories: codziennie (kulisy, proces, Q&A)<br><br>Hashtagi: #makijaż #makijażystka #[TwojeMiasto] #beforeafter',
+
+        'kurs online': 'Jak zrobić kurs online 🎓<br><br><strong>Krok 1:</strong> Wybierz konkretny temat (np. "Makijaż dzienny w 15 minut")<br><strong>Krok 2:</strong> 5-8 lekcji po 10-20 minut każda<br><strong>Krok 3:</strong> Nagraj telefonem w statywie + okno z przodu (dobre światło)<br><strong>Krok 4:</strong> Zmontuj w CapCut (darmowa apka)<br><strong>Krok 5:</strong> Ustaw cenę 197-497 zł<br><strong>Krok 6:</strong> Daj 3 darmowe miejsca influencerkom<br><strong>Krok 7:</strong> Dodaj PDF z checklistą jako bonus<br><br>❌ Błąd: nie rób kursu "o wszystkim" – wybierz jeden temat!',
+
+        'nie mam klientek': 'Spokojnie, każda tak miała! Oto plan 👩‍👩‍👧<br><br><strong>1.</strong> Zrób 5 makijaży za darmo → zdjęcia → portfolio<br><strong>2.</strong> Zostaw wizytówki w salonach fryzjerskich, sklepach<br><strong>3.</strong> Grupy Facebook swojego miasta<br><strong>4.</strong> Promocja "pierwsza klientka -50%"<br><strong>5.</strong> Targi ślubne – makijaż modelek na pokaz<br><strong>6.</strong> Poproś każdą klientkę o polecenie<br><br>💡 5 stałych klientek > 50 na promce!',
+
+        'pędzle': 'Zestaw startowy 5 pędzli 🖌️<br><br><strong>1. Flat top kabuki</strong> – do podkładu (~25 zł)<br><strong>2. Duży puszysty</strong> – do pudru (~20 zł)<br><strong>3. Skośny</strong> – do róży/bronzera (~15 zł)<br><strong>4. Blending brush</strong> – do cieni, KLUCZOWY! (~20 zł)<br><strong>5. Stożkowaty</strong> – do detali (~15 zł)<br><br><strong>Razem:</strong> ~100 zł (Inglot, Hakuro, Ecotools)<br><br><strong>Pielęgnacja:</strong> myj co 7-10 dni, susz na płasko głową w dół, spray antybakteryjny między klientkami. Gąbeczkę beauty blender wymieniaj co 3-4 miesiące.',
+
+        'cera tłusta': 'Dobór produktów do cery tłustej 🎯<br><br><strong>Baza matująca</strong> (Eveline Matt Control, 25 zł)<br><strong>Podkład matujący</strong> (L\'Oreal Infaillible Mat, 55 zł)<br><strong>Puder sypki</strong> transparentny (RCMA, 40 zł)<br><strong>Spray matujący</strong> na koniec<br><br><strong>Technika:</strong> baza → cienka warstwa podkładu → baking w strefie T 5 min → spray. Makijaż trzyma się 8-10h!',
+
+        'cera sucha': 'Dobór produktów do cery suchej 💧<br><br><strong>Baza nawilżająca</strong> + podkład kremowy (Maybelline Fit Me Dewy, 40 zł)<br><strong>Puder</strong> tylko tam gdzie trzeba – unikaj całej twarzy<br><strong>Spray odświeżający</strong> zamiast matującego<br><br>Tip: dobry krem nawilżający 15 min przed makijażem to podstawa!',
+
+        'makijaż ślubny': 'Makijaż ślubny – wszystko co musisz wiedzieć 💍<br><br><strong>Cena:</strong> 400-800 zł + próba 100-200 zł (odliczane)<br><strong>Czas:</strong> 1.5-2h (panna młoda)<br><br><strong>Must-have:</strong><br>• Podkład long-lasting waterproof (bez SPF! – flashback)<br>• Puder sypki do bakingu<br>• Spray utrwalający (Urban Decay All Nighter, 150 zł)<br>• Sztuczne rzęsy<br>• Baza pod cienie – makijaż oka ma wytrzymać 12h+<br><br><strong>Walizka:</strong> zapasowy podkład, gąbeczki, patyczki, chusteczki matujące, spray, zestaw poprawek dla panny młodej',
+
+        'budżet': 'Najlepsze kosmetyki w dobrej cenie 💰<br><br><strong>Podkład:</strong> Lovely BB Cream (15 zł), Wibo Stay Matt (18 zł)<br><strong>Korektor:</strong> Lovely (12 zł)<br><strong>Puder:</strong> Lovely transparentny (12 zł), RCMA sypki (40 zł)<br><strong>Cienie:</strong> Makeup Revolution paleta (30-50 zł)<br><strong>Tusz:</strong> Lovely (12 zł), Maybelline Lash Sensational (40 zł)<br><strong>Róż:</strong> Essence (12 zł)<br><strong>Usta:</strong> Essence (10 zł), NYX (30 zł)<br><strong>Pędzle:</strong> Essence (8-15 zł/szt)<br><br>Gdzie: Hebe, Rossmann, drogerie internetowe',
+
+        'higiena': 'Higiena w pracy makijażystki 🧼<br><br><strong>1.</strong> Myj ręce przed każdym makijażem<br><strong>2.</strong> Spray antybakteryjny na pędzle między klientkami<br><strong>3.</strong> Produkty w kremie wybieraj szpatułką, nie palcami<br><strong>4.</strong> Tusz do rzęs wymiana co 3 miesiące<br><strong>5.</strong> Sprawdzaj terminy ważności (6M, 12M, 24M)<br><strong>6.</strong> Nie dmuchaj na pędzle!<br><strong>7.</strong> Gąbeczki myj po każdym użyciu<br><strong>8.</strong> Opryszczka/trądzik ropny u klientki = odłóż wizytę',
+
+        'technika': 'Najważniejsze techniki makijażowe 🎨<br><br><strong>Baking:</strong> gruba warstwa pudru pod oczami na 5-10 min, zmieść – utrwala i rozświetla<br><strong>Contouring:</strong> modelowanie bronzerem (kości policzkowe, nos, szczęka)<br><strong>Strobing:</strong> tylko rozświetlanie, zero bronzera – naturalny efekt<br><strong>Cut crease:</strong> ostra linia w załamaniu powieki – efekt wow<br><strong>Halo eye:</strong> jasny środek, ciemne brzegi – powiększa oczy<br><strong>Smokey eye:</strong> rozcieranie ciemnych cieni – klasyka<br><strong>Draping:</strong> róż zamiast bronzera – naturalny efekt<br><br>💡 Ćwicz każdą technikę na sobie, zanim zrobisz klientce!',
+
+        'brwi': 'Kompletny przewodnik po brwiach 🏁<br><br><strong>Kształty:</strong><br>• Proste – pasują do długich twarzy<br>• Łukowate – klasyka, do okrągłych i kwadratowych<br>• Zagięte – uniwersalne<br><br><strong>Złote proporcje:</strong> początek = linia od skrzydła nosa, łuk = 2/3 długości, koniec = linia od nosa przez zewn. kącik oka<br><br><strong>Produkty:</strong> kredka, pomada, cień, żel utrwalający<br><br><strong>Ceny usług:</strong> korekta 40-80 zł, henna+regulacja 50-100 zł, laminacja 80-150 zł<br><br><strong>Cross-selling:</strong> dodaj brwi do oferty jako pakiet z makijażem!',
+
+        'rzęsy': 'Sztuczne rzęsy – kompletny przewodnik 👁️<br><br><strong>Rodzaje:</strong><br>• Pasek (jedna taśma) – 20-50 zł, mocny efekt<br>• Kępki (5-8) – 40-80 zł, naturalny efekt<br>• Pojedyncze – 50-100 zł, bardzo naturalne<br>• Przedłużanie 1:1 – 100-200 zł, trzyma się 3-4 tyg<br><br><strong>Dobór do oka:</strong><br>• Okrągłe: dłuższe w zewn. kąciku<br>• Skośne w dół: przedłużaj zewn. kącik<br>• Małe: krótkie, naturalne kępki<br><br><strong>Pakiet ślubny:</strong> makijaż + rzęsy + brwi = 500-900 zł (rabat 10%)',
+
+        'cross-selling': 'Jak zarobić więcej jako makijażystka 💎<br><br><strong>Dodatkowe usługi które możesz dodać:</strong><br>• Przedłużanie rzęs: 100-200 zł<br>• Henna brwi + regulacja: 50-100 zł<br>• Laminacja brwi: 80-150 zł<br>• Sztuczne rzęsy na wyjście: 40-80 zł<br><br><strong>Pakiety (rabat 10%):</strong><br>💍 "Ślubny": makijaż + rzęsy + brwi = 500-900 zł<br>🎓 "Studniówka": makijaż + rzęsy = 250-400 zł<br>🎁 "Prezent": bon podarunkowy na dowolną usługę<br><br><strong>Jak sprzedawać?</strong><br>"Przy okazji makijażu ślubnego mogę zrobić próbne rzęsy – to dodatkowo 50 zł, a efekt na zdjęciach będzie niesamowity!"<br><br>💡 Każda dodatkowa usługa to 50-200 zł więcej od tej samej klientki!',
+
+        'okrągła twarz': 'Makijaż dla okrągłej twarzy 👩<br><br><strong>Cel:</strong> optyczne wysmuklenie<br><br><strong>Contouring:</strong> mocniej po bokach twarzy (skronie, boki żuchwy, pod kością policzkową)<br><strong>Róż:</strong> pod kością policzkową, nie na środek<br><strong>Brwi:</strong> z wyraźnym łukiem (optycznie wydłuża twarz)<br><strong>Unikaj:</strong> poziomych linii, brokatu na całej twarzy',
+
+        'kwadratowa twarz': 'Makijaż dla kwadratowej twarzy 🟦<br><br><strong>Cel:</strong> złagodzenie ostrych kątów<br><br><strong>Contouring:</strong> na kąty żuchwy i skronie<br><strong>Róż:</strong> na środek policzka, blendowany ku skroniom<br><strong>Brwi:</strong> miękkie, zaokrąglone (nie kanciaste!)<br><strong>Unikaj:</strong> ostrych linii, geometrycznych kształtów',
+
+        'sercowata twarz': 'Makijaż dla twarzy sercowatej ❤️<br><br><strong>Cel:</strong> zbalansowanie szerokiego czoła z wąskim podbródkiem<br><br><strong>Contouring:</strong> na skronie i boki czoła<br><strong>Rozświetlenie:</strong> środek brody (optycznie poszerza)<br><strong>Róż:</strong> na środek policzka<br><strong>Unikaj:</strong> ciemnych cieni na brodzie',
+
+        'długa twarz': 'Makijaż dla długiej/prostokątnej twarzy 📏<br><br><strong>Cel:</strong> optyczne skrócenie<br><br><strong>Contouring:</strong> na czubek czoła (przy linii włosów) i na koniec brody<br><strong>Róż:</strong> poziomo na policzkach<br><strong>Unikaj:</strong> cieni pod oczami (optycznie wydłużają)',
+
+        'oczy okrągłe': 'Makijaż dla okrągłych oczu 👁️<br><br><strong>Cel:</strong> optyczne wydłużenie<br><br><strong>Kreska:</strong> cienka na całej powiece, przedłużona poza zewn. kącik<br><strong>Cienie:</strong> ciemniejsze w zewn. kąciku, blendowane na zewnątrz<br><strong>Unikaj:</strong> grubej kreski na całej powiece, jasnych cieni na środku',
+
+        'oczy małe': 'Makijaż dla małych oczu 👀<br><br><strong>Cel:</strong> optyczne powiększenie<br><br><strong>Cienie:</strong> jasne na całej powiece<br><strong>Kredka:</strong> biała/beżowa na linii wodnej (otwiera oko!)<br><strong>Kreska:</strong> cienka, tylko na górnej powiece (nigdy na dolnej!)<br><strong>Tusz:</strong> pogrubiający, podkręcający',
+
+        'oczy skośne': 'Makijaż dla skośnych oczu (w dół) 😔<br><br><strong>Cel:</strong> optyczne podniesienie kącików<br><br><strong>Kreska:</strong> unosząca się ku górze w zewn. kąciku<br><strong>Cienie:</strong> jaśniejsze w wewnętrznym, ciemniejsze na zewnątrz, blendowane ku górze<br><strong>Rzęsy:</strong> dłuższe w zewn. kąciku',
+
+        'błąd': 'Najczęstsze błędy początkujących makijażystek ❌<br><br>1. Źle dobrany odcień podkładu – testuj na żuchwie, nie na dłoni!<br>2. Za dużo produktu – efekt maski. Buduj krycie warstwami.<br>3. Brak blendowania – blenduj, blenduj, blenduj!<br>4. Pomijanie bazy pod cienie – cienie rolują się po 2h<br>5. Za jasny korektor pod oczy – o ton jaśniejszy, nie dwa<br>6. Niewłaściwa pielęgnacja pędzli – bakterie = problemy skórne<br>7. Brak sprayu utrwalającego – makijaż nie trwa cały dzień<br><br>💡 Każda z nas popełniała te błędy!',
+
+        'trendy': 'Trendy w makijażu 2026 🔥<br><br><strong>Clean girl aesthetic:</strong> naturalna, promienna skóra<br><strong>Latte makeup:</strong> brązy, karmele, ciepłe tony<br><strong>Glazed donut skin:</strong> ekstremalnie rozświetlona skóra<br><strong>Soap brows:</strong> wyczesane ku górze "mydlane" brwi<br><strong>Berry lips:</strong> jagodowe, czerwono-fioletowe usta<br><strong>Graphic liner:</strong> geometryczne kreski, kolorowe eyelinery<br><strong>Douyin makeup:</strong> chiński trend – duże oczy, rozświetlenie<br><strong>Skinimalism:</strong> minimalizm, mniej produktów = lepsza jakość',
+
+        'fotograficzny': 'Makijaż fotograficzny/studyjny 📸<br><br><strong>Różnice vs dzienny:</strong><br>• Mocniejsze konturowanie (światło "zjada" makijaż)<br>• Matowe wykończenie (błyszczenie pod lampami)<br>• Unikaj SPF! (flashback na zdjęciach)<br>• Sztuczne rzęsy – zawsze!<br>• Baking – obowiązkowy<br><br><strong>Współpraca z fotografem:</strong><br>• Zapytaj o oświetlenie przed startem<br>• Zrób zdjęcie testowe<br>• Miej chusteczki matujące i puder pod ręką<br>• Poprawiaj makijaż między zdjęciami',
+
+        'pakiet': 'Pakiety usług dla klientek 🎁<br><br><strong>💍 Pakiet Ślubny:</strong> makijaż panny młodej + próba + rzęsy + brwi = 500-900 zł (oszczędzasz 10%)<br><strong>🎓 Pakiet Studniówkowy:</strong> makijaż + rzęsy + brwi = 250-400 zł<br><strong>👩‍👧 Pakiet Matka + Córka:</strong> dwa makijaże dzienne = 250 zł zamiast 300 zł<br><strong>🎁 Bon podarunkowy:</strong> 100-500 zł – idealny prezent<br><br>💡 Klientki uwielbiają pakiety – czują że oszczędzają, a Ty zarabiasz więcej!'
+    };
+
+    function startApp() { ONBOARD.classList.add('hidden'); INPUT.focus(); }
+
+    function addMsg(text, role) {
+        const div = document.createElement('div');
+        div.className = 'message ' + role;
+        const av = document.createElement('div'); av.className = 'message-avatar'; av.textContent = role === 'bot' ? '✨' : '👤';
+        const bub = document.createElement('div'); bub.className = 'message-bubble'; bub.innerHTML = text;
+        div.appendChild(av); div.appendChild(bub);
+        CHAT.appendChild(div);
+        CHAT.scrollTop = CHAT.scrollHeight;
+    }
+
+    function showTyping() {
+        const div = document.createElement('div'); div.className = 'typing'; div.id = 'typingInd';
+        div.innerHTML = '<div class="typing-dots"><span></span><span></span><span></span></div>';
+        CHAT.appendChild(div); CHAT.scrollTop = CHAT.scrollHeight;
+    }
+
+    function hideTyping() { const el = document.getElementById('typingInd'); if (el) el.remove(); }
+
+    function getAnswer(input) {
+        const lower = input.toLowerCase();
+        for (const [key, val] of Object.entries(ANSWERS)) {
+            if (lower.includes(key)) return val;
+        }
+        return 'Rozumiem! Opowiedz mi więcej o swoim problemie, a postaram się pomóc 😊<br><br>Mogę doradzić w tematach:<br>• 🚀 <strong>Jak zacząć</strong> – kurs, sprzęt, pierwsze kroki<br>• 🖌️ <strong>Pędzle</strong> – co kupić na start, jak dbać<br>• 🎨 <strong>Produkty</strong> – podkłady, cienie, tusze, marki, ceny<br>• 💰 <strong>Cennik</strong> – ile brać za usługi<br>• 👩 <strong>Kształty twarzy/oczu</strong> – makijaż dopasowany<br>• 🏁 <strong>Brwi i rzęsy</strong> – przewodnik + cross-selling<br>• 👩‍👩‍👧 <strong>Klientki</strong> – jak zdobyć i utrzymać<br>• 📱 <strong>Social media</strong> – plan działania<br>• 🎓 <strong>Kurs online</strong> – jak stworzyć i sprzedać<br>• 💎 <strong>Cross-selling</strong> – jak zarobić więcej<br><br>Który temat Cię interesuje? 😊';
+    }
+
+    async function sendMessage() {
+        const text = INPUT.value.trim();
+        if (!text) return;
+        INPUT.value = ''; INPUT.style.height = 'auto'; SEND.disabled = true;
+        const welcome = document.querySelector('.welcome-msg');
+        if (welcome) welcome.style.display = 'none';
+        addMsg(text, 'user');
+        showTyping();
+        await new Promise(r => setTimeout(r, 600 + Math.random() * 500));
+        hideTyping();
+        addMsg(getAnswer(text), 'bot');
+        SEND.disabled = false;
+        INPUT.focus();
+    }
+
+    function sendQuick(text) { INPUT.value = text; sendMessage(); }
+
+    INPUT.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = Math.min(this.scrollHeight, 120) + 'px'; });
+    INPUT.addEventListener('keydown', function(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+    console.log('✨ Mentor Makijażystki v1.2 loaded!');
+</script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a00f17154f92c3b0',t:'MTc3OTY1NDk2MQ=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
